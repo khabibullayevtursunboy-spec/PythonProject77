@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Maqola formasi</title>
+</head>
+<body>
+    <h1>Maqola saqlash / tahrirlash</h1>
+    <hr>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" style="background-color: green; color: white; padding: 10px 20px;">💾 Saqlash</button>
+        <a href="{% url 'royxat' %}"><button type="button" style="padding: 10px 20px;">Bekor qilish</button></a>
+    </form>
+</body>
+</html>

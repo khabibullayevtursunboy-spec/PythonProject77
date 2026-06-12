@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Maqolani o'chirish</title>
+</head>
+<body>
+    <h1>Maqolani o'chirish</h1>
+    <hr>
+    <p>Siz haqiqatdan ham <strong>"{{ object.sarlavha }}"</strong> maqolasini o'chirishni xohlaysizmi?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" style="background-color: red; color: white; padding: 10px 20px;">⚠️ Ha, o'chirilsin</button>
+        <a href="{% url 'royxat' %}"><button type="button" style="padding: 10px 20px;">Yo'q, bekor qilish</button></a>
+    </form>
+</body>
+</html>

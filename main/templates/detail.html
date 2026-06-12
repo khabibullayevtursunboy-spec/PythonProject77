@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ maqola.sarlavha }}</title>
+</head>
+<body>
+    <h1>{{ maqola.sarlavha }}</h1>
+    <p><strong>Muallif:</strong> {{ maqola.muallif }} | <strong>Sana:</strong> {{ maqola.sana }}</p>
+    <p><strong>Ko'rishlar soni:</strong> {{ maqola.korishlar }}</p>
+    <hr>
+    <p>{{ maqola.matn }}</p>
+    <br>
+
+    <a href="{% url 'maqola_tahrirlash' maqola.pk %}"><button style="background-color: orange; color: white; padding: 10px;">✏️ Tahrirlash</button></a>
+    <a href="{% url 'maqola_ochirish' maqola.pk %}"><button style="background-color: red; color: white; padding: 10px;">🗑️ O'chirish</button></a>
+    <a href="{% url 'royxat' %}"><button style="padding: 10px;">⬅️ Ro'yxatga qaytish</button></a>
+</body>
+</html>

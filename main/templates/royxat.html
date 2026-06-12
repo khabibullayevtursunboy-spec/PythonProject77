@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ sarlavha }}</title>
+</head>
+<body>
+    <h1>{{ sarlavha }}</h1>
+    <p>Jami maqolalar soni: {{ jami }}</p>
+
+    <a href="{% url 'maqola_yangi' %}"><button style="background-color: green; color: white; padding: 10px;">➕ Yangi maqola qo'shish</button></a>
+    <a href="{% url 'about' %}"><button style="padding: 10px;">Biz haqimizda</button></a>
+    <hr>
+
+    <ul>
+        {% for m in maqolalar %}
+            <li style="margin-bottom: 15px;">
+                <a href="{% url 'detail' m.pk %}" style="font-size: 18px; font-weight: bold;">{{ m.sarlavha }}</a> - {{ m.muallif }}
+                <br>
+                <a href="{% url 'maqola_tahrirlash' m.pk %}"><button style="background-color: orange; color: white;">✏️ Tahrirlash</button></a>
+                <a href="{% url 'maqola_ochirish' m.pk %}"><button style="background-color: red; color: white;">🗑️ O'chirish</button></a>
+            </li>
+        {% empty %}
+            <li>Hozircha maqolalar yo'q.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
