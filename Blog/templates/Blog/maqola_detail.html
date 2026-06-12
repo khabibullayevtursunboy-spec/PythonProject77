@@ -1,0 +1,7 @@
+<h1>{{ maqola.sarlavha }}</h1>
+<p>Muallif: {{ maqola.muallif }} | Sana: {{ maqola.sana }}</p>
+<p>Ko'rishlar soni: {{ maqola.korishlar }}</p>
+<div>
+    {{ maqola.matn }}
+</div>
+<a href="{% url 'maqola_list' %}">Orqaga qaytish</a>

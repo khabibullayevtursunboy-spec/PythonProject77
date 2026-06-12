@@ -1,0 +1,9 @@
+<h1>Maqolalar</h1>
+<p>Jami maqolalar soni: {{ jami_maqolalar }}</p>
+
+{% for maqola in maqolalar %}
+    <h2><a href="{% url 'maqola_detail' maqola.pk %}">{{ maqola.sarlavha }}</a></h2>
+    <p>Muallif: {{ maqola.muallif }} | Sana: {{ maqola.sana }}</p>
+    <p>{{ maqola.matn|truncatewords:30 }}</p>
+    <hr>
+{% endfor %}
