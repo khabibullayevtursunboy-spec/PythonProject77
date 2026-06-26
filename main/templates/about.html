@@ -1,12 +1,524 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Biz haqimizda</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0c29;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: background 0.5s;
+        }
+        body.light {
+            background: #e8f4fd;
+        }
+
+        /* ===== RGB KVADRAT SIM ===== */
+        .rgb-border {
+            position: fixed;
+            inset: 12px;
+            border-radius: 20px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .rgb-border::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 22px;
+            background: linear-gradient(var(--angle, 0deg),
+                #ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff,#ff0000);
+            animation: rgb-spin 3s linear infinite;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            padding: 3px;
+        }
+        @property --angle {
+            syntax: '<angle>'; initial-value: 0deg; inherits: false;
+        }
+        @keyframes rgb-spin { to { --angle: 360deg; } }
+
+        /* ===== CANVAS ===== */
+        canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        #rainCanvas    { z-index: 1; }
+        #rippleCanvas  { z-index: 2; }
+        #meteorCanvas  { z-index: 1; }
+        #particleCanvas{ z-index: 4; }
+
+        /* ===== BULUTLAR ===== */
+        .clouds { position: fixed; top: 0; left: 0; width: 100%; z-index: 1; pointer-events: none; }
+        .cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50px;
+            filter: blur(8px);
+        }
+        .cloud::before,.cloud::after {
+            content:''; position:absolute;
+            background:rgba(255,255,255,0.07);
+            border-radius:50%;
+        }
+        .cloud-1{width:200px;height:50px;top:40px;animation:cloud-move 18s linear infinite;}
+        .cloud-1::before{width:80px;height:80px;top:-40px;left:30px;}
+        .cloud-1::after{width:60px;height:60px;top:-30px;left:90px;}
+        .cloud-2{width:160px;height:40px;top:100px;animation:cloud-move 25s linear infinite;animation-delay:-8s;}
+        .cloud-2::before{width:60px;height:60px;top:-30px;left:20px;}
+        .cloud-2::after{width:50px;height:50px;top:-25px;left:70px;}
+        .cloud-3{width:240px;height:55px;top:20px;animation:cloud-move 20s linear infinite;animation-delay:-14s;}
+        .cloud-3::before{width:90px;height:90px;top:-45px;left:40px;}
+        .cloud-3::after{width:70px;height:70px;top:-35px;left:110px;}
+        @keyframes cloud-move { from{left:-300px} to{left:110%} }
+
+        /* ===== CHAQMOQ ===== */
+        #lightning {
+            position:fixed; top:0; left:0;
+            width:100%; height:100%;
+            pointer-events:none; z-index:3; opacity:0;
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .ctrl-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.2s;
+        }
+        .ctrl-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
+        body.light .ctrl-btn { background: rgba(0,0,0,0.1); color: #333; border-color: rgba(0,0,0,0.2); }
+
+        /* ===== SOAT ===== */
+        .clock {
+            position: fixed;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 10px 24px;
+        }
+        .clock .time {
+            font-size: 28px; font-weight: 700;
+            background: linear-gradient(135deg,#a78bfa,#60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .clock .date { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+        body.light .clock .date { color: #666; }
+
+        /* ===== TIL ===== */
+        .lang-bar {
+            position: fixed;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 10px;
+        }
+        .lang-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 2px solid rgba(167,139,250,0.5);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        .lang-btn.active, .lang-btn:hover {
+            background: linear-gradient(135deg,#a78bfa,#60a5fa);
+            border-color: transparent;
+        }
+        body.light .lang-btn { color: #333; }
+
+        /* ===== CARD ===== */
+        .about-card {
+            position: relative; z-index: 10;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 60px 50px;
+            max-width: 680px; width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: fadeUp 0.7s ease;
+        }
+        body.light .about-card {
+            background: rgba(255,255,255,0.7);
+            border-color: rgba(0,0,0,0.1);
+        }
+        @keyframes fadeUp {
+            from{opacity:0;transform:translateY(30px)}
+            to{opacity:1;transform:translateY(0)}
+        }
+        .about-icon { font-size:64px; margin-bottom:20px; display:block; animation:pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+        .about-title {
+            font-size:36px; font-weight:700;
+            background: linear-gradient(135deg,#a78bfa,#60a5fa,#f472b6);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            margin-bottom:16px;
+        }
+        .about-divider {
+            width:60px; height:4px;
+            background:linear-gradient(135deg,#a78bfa,#60a5fa);
+            border-radius:2px; margin:0 auto 24px;
+        }
+        .about-text {
+            color:rgba(255,255,255,0.75);
+            font-size:17px; line-height:1.8; margin-bottom:40px;
+        }
+        body.light .about-text { color: #444; }
+        .about-stats { display:flex; justify-content:center; gap:30px; margin-bottom:40px; flex-wrap:wrap; }
+        .stat-box {
+            background:rgba(255,255,255,0.08);
+            border-radius:14px; padding:18px 28px; min-width:120px;
+        }
+        body.light .stat-box { background:rgba(0,0,0,0.05); }
+        .stat-num { font-size:28px; font-weight:700; color:#a78bfa; display:block; }
+        .stat-label { font-size:13px; color:rgba(255,255,255,0.55); margin-top:4px; }
+        body.light .stat-label { color:#666; }
+        .about-btn {
+            display:inline-block; padding:14px 36px;
+            background:linear-gradient(135deg,#a78bfa,#60a5fa);
+            color:white; text-decoration:none; border-radius:50px;
+            font-size:16px; font-weight:600;
+            transition:transform 0.2s,box-shadow 0.2s;
+            box-shadow:0 8px 24px rgba(167,139,250,0.4);
+        }
+        .about-btn:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(167,139,250,0.6); }
+
+        /* ===== FEEDBACK ===== */
+        .feedback {
+            margin-top: 30px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        body.light .feedback { background: rgba(0,0,0,0.04); }
+        .feedback p { color: rgba(255,255,255,0.7); margin-bottom: 12px; font-size: 15px; }
+        body.light .feedback p { color: #555; }
+        .stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .star { font-size: 28px; cursor: pointer; transition: transform 0.2s; filter: grayscale(1); }
+        .star:hover, .star.active { filter: grayscale(0); transform: scale(1.3); }
+        .feedback-msg {
+            font-size: 14px; color: #a78bfa;
+            min-height: 20px; transition: all 0.3s;
+        }
+    </style>
 </head>
 <body>
-    <h1>Biz haqimizda</h1>
-    <p> sayt haqida yaxshi baho qyasiz degan umitdamiz.</p>
-    <br>
-    <a href="{% url 'royxat' %}">Bosh sahifaga o'tish</a>
+
+<div class="rgb-border"></div>
+
+<div class="clouds">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+</div>
+
+<canvas id="rainCanvas"></canvas>
+<canvas id="meteorCanvas"></canvas>
+<canvas id="rippleCanvas"></canvas>
+<canvas id="particleCanvas"></canvas>
+<div id="lightning"></div>
+
+<!-- Soat -->
+<div class="clock">
+    <div class="time" id="clockTime">00:00:00</div>
+    <div class="date" id="clockDate"></div>
+</div>
+
+<!-- Boshqaruvlar -->
+<div class="controls">
+    <button class="ctrl-btn" onclick="toggleTheme()">🌙 Dark / Light</button>
+    <button class="ctrl-btn" onclick="toggleSound()">🔇 Ovoz</button>
+</div>
+
+<!-- Til tanlash -->
+<div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('uz')">🇺🇿 O'zbek</button>
+    <button class="lang-btn" onclick="setLang('ru')">🇷🇺 Rus</button>
+    <button class="lang-btn" onclick="setLang('en')">🇬🇧 English</button>
+</div>
+
+<!-- Kontent -->
+<div class="about-card">
+    <span class="about-icon">📰</span>
+    <h1 class="about-title" id="title">Biz haqimizda</h1>
+    <div class="about-divider"></div>
+    <p class="about-text" id="desc">
+        Bu platforma orqali siz yangi maqolalar o'qishingiz,
+        o'z fikrlaringizni ulashishingiz va bilimlaringizni
+        kengaytirishingiz mumkin. Saytga yaxshi baho qoldirsangiz — xursand bo'lamiz! 🙏
+    </p>
+    <div class="about-stats">
+        <div class="stat-box"><span class="stat-num">📝</span><span class="stat-label" id="s1">Maqolalar</span></div>
+        <div class="stat-box"><span class="stat-num">👥</span><span class="stat-label" id="s2">Mualliflar</span></div>
+        <div class="stat-box"><span class="stat-num">🌟</span><span class="stat-label" id="s3">Sifatli kontent</span></div>
+    </div>
+    <a href="{% url 'royxat' %}" class="about-btn" id="homeBtn">🏠 Bosh sahifaga o'tish</a>
+
+    <!-- Feedback -->
+    <div class="feedback">
+        <p id="feedbackTitle">Saytga baho bering:</p>
+        <div class="stars">
+            <span class="star" onclick="rate(1)">⭐</span>
+            <span class="star" onclick="rate(2)">⭐</span>
+            <span class="star" onclick="rate(3)">⭐</span>
+            <span class="star" onclick="rate(4)">⭐</span>
+            <span class="star" onclick="rate(5)">⭐</span>
+        </div>
+        <div class="feedback-msg" id="feedbackMsg"></div>
+    </div>
+</div>
+
+<script>
+// ===== SOAT =====
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clockTime').textContent = now.toLocaleTimeString();
+    document.getElementById('clockDate').textContent = now.toLocaleDateString('uz-UZ', {
+        weekday:'long', year:'numeric', month:'long', day:'numeric'
+    });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== DARK/LIGHT =====
+function toggleTheme() {
+    document.body.classList.toggle('light');
+}
+
+// ===== OVOZ =====
+let audioCtx = null;
+let soundOn = false;
+let rainNode = null;
+
+function toggleSound() {
+    const btn = document.querySelector('.controls .ctrl-btn:nth-child(2)');
+    if (!soundOn) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const bufferSize = 4096;
+        rainNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+        rainNode.onaudioprocess = e => {
+            const out = e.outputBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) out[i] = (Math.random() * 2 - 1) * 0.06;
+        };
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1200;
+        rainNode.connect(filter);
+        filter.connect(audioCtx.destination);
+        soundOn = true;
+        btn.textContent = '🔊 Ovoz';
+    } else {
+        rainNode.disconnect();
+        audioCtx.close();
+        soundOn = false;
+        btn.textContent = '🔇 Ovoz';
+    }
+}
+
+// ===== TIL =====
+const translations = {
+    uz: { title:'Biz haqimizda', desc:'Bu platforma orqali siz yangi maqolalar o\'qishingiz, o\'z fikrlaringizni ulashishingiz va bilimlaringizni kengaytirishingiz mumkin. Saytga yaxshi baho qoldirsangiz — xursand bo\'lamiz! 🙏', s1:'Maqolalar', s2:'Mualliflar', s3:'Sifatli kontent', home:'🏠 Bosh sahifaga o\'tish', feedback:'Saytga baho bering:' },
+    ru: { title:'О нас', desc:'На этой платформе вы можете читать новые статьи, делиться своими мыслями и расширять знания. Будем рады вашей оценке! 🙏', s1:'Статьи', s2:'Авторы', s3:'Качество', home:'🏠 На главную', feedback:'Оцените сайт:' },
+    en: { title:'About Us', desc:'On this platform you can read new articles, share your thoughts and expand your knowledge. We\'d love your feedback! 🙏', s1:'Articles', s2:'Authors', s3:'Quality', home:'🏠 Go Home', feedback:'Rate the site:' }
+};
+
+function setLang(lang) {
+    const t = translations[lang];
+    document.getElementById('title').textContent = t.title;
+    document.getElementById('desc').textContent = t.desc;
+    document.getElementById('s1').textContent = t.s1;
+    document.getElementById('s2').textContent = t.s2;
+    document.getElementById('s3').textContent = t.s3;
+    document.getElementById('homeBtn').textContent = t.home;
+    document.getElementById('feedbackTitle').textContent = t.feedback;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+// ===== BAHO =====
+const feedbackTexts = {
+    1: '😢 Afsuski...', 2: '😐 Yaxshilash mumkin',
+    3: '🙂 Yomon emas!', 4: '😊 Yaxshi!', 5: '🤩 Ajoyib! Rahmat!'
+};
+function rate(n) {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((s, i) => s.classList.toggle('active', i < n));
+    document.getElementById('feedbackMsg').textContent = feedbackTexts[n];
+}
+
+// ===== YOMG'IR =====
+const rainCanvas = document.getElementById('rainCanvas');
+const rCtx = rainCanvas.getContext('2d');
+rainCanvas.width = window.innerWidth;
+rainCanvas.height = window.innerHeight;
+const drops = Array.from({length:180}, () => ({
+    x: Math.random()*rainCanvas.width, y: Math.random()*rainCanvas.height,
+    speed: 8+Math.random()*8, length: 15+Math.random()*20, opacity: 0.2+Math.random()*0.4
+}));
+function drawRain() {
+    rCtx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
+    drops.forEach(d => {
+        rCtx.beginPath(); rCtx.moveTo(d.x,d.y); rCtx.lineTo(d.x-1,d.y+d.length);
+        rCtx.strokeStyle=`rgba(174,214,241,${d.opacity})`; rCtx.lineWidth=1; rCtx.stroke();
+        d.y+=d.speed; if(d.y>rainCanvas.height){d.y=-d.length; d.x=Math.random()*rainCanvas.width;}
+    });
+    requestAnimationFrame(drawRain);
+}
+drawRain();
+
+// ===== METEOR =====
+const metCanvas = document.getElementById('meteorCanvas');
+const mCtx = metCanvas.getContext('2d');
+metCanvas.width = window.innerWidth;
+metCanvas.height = window.innerHeight;
+const meteors = [];
+function spawnMeteor() {
+    meteors.push({ x: Math.random()*metCanvas.width, y: 0, vx: 4+Math.random()*4, vy: 3+Math.random()*3, len: 80+Math.random()*80, opacity: 1 });
+}
+setInterval(spawnMeteor, 1200);
+function drawMeteors() {
+    mCtx.clearRect(0,0,metCanvas.width,metCanvas.height);
+    for(let i=meteors.length-1;i>=0;i--) {
+        const m=meteors[i];
+        const grad=mCtx.createLinearGradient(m.x,m.y,m.x-m.len,m.y-m.len*0.6);
+        grad.addColorStop(0,`rgba(255,255,255,${m.opacity})`);
+        grad.addColorStop(1,'rgba(255,255,255,0)');
+        mCtx.beginPath(); mCtx.moveTo(m.x,m.y); mCtx.lineTo(m.x-m.len,m.y-m.len*0.6);
+        mCtx.strokeStyle=grad; mCtx.lineWidth=2; mCtx.stroke();
+        m.x+=m.vx; m.y+=m.vy; m.opacity-=0.012;
+        if(m.opacity<=0||m.y>metCanvas.height) meteors.splice(i,1);
+    }
+    requestAnimationFrame(drawMeteors);
+}
+drawMeteors();
+
+// ===== RIPPLE =====
+const rippleCanvas = document.getElementById('rippleCanvas');
+const ripCtx = rippleCanvas.getContext('2d');
+rippleCanvas.width = window.innerWidth;
+rippleCanvas.height = window.innerHeight;
+const ripples = [];
+document.addEventListener('mousemove', e => {
+    if(Math.random()>0.85) ripples.push({x:e.clientX,y:e.clientY,r:2,opacity:0.8});
+});
+function drawRipples() {
+    ripCtx.clearRect(0,0,rippleCanvas.width,rippleCanvas.height);
+    for(let i=ripples.length-1;i>=0;i--) {
+        const rp=ripples[i];
+        ripCtx.beginPath(); ripCtx.arc(rp.x,rp.y,rp.r,0,Math.PI*2);
+        ripCtx.strokeStyle=`rgba(96,165,250,${rp.opacity})`; ripCtx.lineWidth=1.5; ripCtx.stroke();
+        rp.r+=1.5; rp.opacity-=0.025;
+        if(rp.opacity<=0) ripples.splice(i,1);
+    }
+    requestAnimationFrame(drawRipples);
+}
+drawRipples();
+
+// ===== PARTICLE (sichqoncha uchqun) =====
+const pCanvas = document.getElementById('particleCanvas');
+const pCtx = pCanvas.getContext('2d');
+pCanvas.width = window.innerWidth;
+pCanvas.height = window.innerHeight;
+const particles = [];
+const colors = ['#a78bfa','#60a5fa','#f472b6','#fbbf24','#34d399'];
+document.addEventListener('mousemove', e => {
+    for(let i=0;i<3;i++) particles.push({
+        x:e.clientX, y:e.clientY,
+        vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4,
+        r:2+Math.random()*3, opacity:1,
+        color:colors[Math.floor(Math.random()*colors.length)]
+    });
+});
+function drawParticles() {
+    pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+    for(let i=particles.length-1;i>=0;i--) {
+        const p=particles[i];
+        pCtx.beginPath(); pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        pCtx.fillStyle=p.color.replace(')',`,${p.opacity})`).replace('rgb','rgba');
+        pCtx.globalAlpha=p.opacity; pCtx.fill(); pCtx.globalAlpha=1;
+        p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.opacity-=0.03;
+        if(p.opacity<=0) particles.splice(i,1);
+    }
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ===== CHAQMOQ =====
+const lightning = document.getElementById('lightning');
+function flashLightning() {
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+    svg.style.cssText='position:absolute;top:0;left:0;';
+    const x=100+Math.random()*(window.innerWidth-200);
+    let pts=`${x},0 `, cy=0, cx=x;
+    while(cy<window.innerHeight*0.7){cx+=(Math.random()-0.5)*80;cy+=40+Math.random()*60;pts+=`${cx},${cy} `;}
+    const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+    defs.innerHTML=`<filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+    const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    poly.setAttribute('points',pts); poly.setAttribute('stroke','rgba(255,255,180,0.95)');
+    poly.setAttribute('stroke-width','2'); poly.setAttribute('fill','none'); poly.setAttribute('filter','url(#glow)');
+    svg.appendChild(defs); svg.appendChild(poly); lightning.appendChild(svg);
+    lightning.style.opacity='1';
+    setTimeout(()=>{lightning.style.opacity='0.6'},50);
+    setTimeout(()=>{lightning.style.opacity='1'},100);
+    setTimeout(()=>{lightning.style.opacity='0';lightning.innerHTML=''},200);
+
+    // Chaqmoq ovozi
+    if(soundOn && audioCtx) {
+        const osc=audioCtx.createOscillator();
+        const gain=audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(80,audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(20,audioCtx.currentTime+0.3);
+        gain.gain.setValueAtTime(0.8,audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.3);
+        osc.start(); osc.stop(audioCtx.currentTime+0.3);
+    }
+}
+setInterval(flashLightning,2000);
+
+// ===== RESIZE =====
+window.addEventListener('resize',()=>{
+    [rainCanvas,metCanvas,rippleCanvas,pCanvas].forEach(c=>{
+        c.width=window.innerWidth; c.height=window.innerHeight;
+    });
+});
+</script>
 </body>
 </html>

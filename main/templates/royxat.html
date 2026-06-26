@@ -2,26 +2,446 @@
 <html>
 <head>
     <title>{{ sarlavha }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===== DARK/LIGHT TOGGLE ===== */
+        #theme-toggle { display: none; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0c29;
+            color: #eee;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.4s, color 0.4s;
+        }
+
+        #theme-toggle:checked ~ body {
+            background: #f0f4ff;
+            color: #333;
+        }
+
+        /* ===== THEME BUTTON ===== */
+        .theme-btn {
+            position: fixed;
+            top: 16px; right: 16px;
+            z-index: 100;
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.25);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .theme-btn:hover { background: rgba(255,255,255,0.22); }
+        #theme-toggle:checked ~ .theme-btn {
+            background: rgba(0,0,0,0.08);
+            color: #333;
+            border-color: rgba(0,0,0,0.15);
+        }
+
+        /* ===== RGB KVADRAT SIM ===== */
+        .rgb-border {
+            position: fixed;
+            inset: 10px;
+            border-radius: 20px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .rgb-border::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 22px;
+            background: linear-gradient(var(--angle, 0deg),
+                #ff0000,#ff7700,#ffff00,#00ff00,
+                #0000ff,#8b00ff,#ff0000);
+            animation: rgb-spin 3s linear infinite;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            padding: 3px;
+        }
+        @property --angle {
+            syntax: '<angle>'; initial-value: 0deg; inherits: false;
+        }
+        @keyframes rgb-spin { to { --angle: 360deg; } }
+
+        /* ===== YULDUZLAR ===== */
+        .stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .stars::before, .stars::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image:
+                radial-gradient(1px 1px at 10% 15%, white, transparent),
+                radial-gradient(1px 1px at 25% 40%, white, transparent),
+                radial-gradient(1.5px 1.5px at 40% 10%, white, transparent),
+                radial-gradient(1px 1px at 55% 60%, white, transparent),
+                radial-gradient(1px 1px at 70% 25%, white, transparent),
+                radial-gradient(1.5px 1.5px at 80% 70%, white, transparent),
+                radial-gradient(1px 1px at 90% 45%, white, transparent),
+                radial-gradient(1px 1px at 15% 75%, white, transparent),
+                radial-gradient(1px 1px at 35% 85%, white, transparent),
+                radial-gradient(1.5px 1.5px at 60% 90%, white, transparent),
+                radial-gradient(1px 1px at 75% 5%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 5% 55%, white, transparent),
+                radial-gradient(1px 1px at 88% 88%, white, transparent),
+                radial-gradient(1.5px 1.5px at 20% 20%, white, transparent),
+                radial-gradient(1px 1px at 45% 30%, white, transparent),
+                radial-gradient(1px 1px at 65% 45%, white, transparent),
+                radial-gradient(1px 1px at 30% 60%, white, transparent),
+                radial-gradient(1px 1px at 95% 15%, white, transparent),
+                radial-gradient(1.5px 1.5px at 3% 90%, white, transparent);
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+        .stars::after {
+            background-image:
+                radial-gradient(1px 1px at 18% 33%, white, transparent),
+                radial-gradient(1px 1px at 42% 67%, white, transparent),
+                radial-gradient(1.5px 1.5px at 63% 12%, white, transparent),
+                radial-gradient(1px 1px at 78% 55%, white, transparent),
+                radial-gradient(1px 1px at 92% 78%, white, transparent),
+                radial-gradient(1px 1px at 8% 48%, white, transparent),
+                radial-gradient(1px 1px at 33% 22%, white, transparent),
+                radial-gradient(1.5px 1.5px at 57% 38%, white, transparent),
+                radial-gradient(1px 1px at 72% 92%, white, transparent),
+                radial-gradient(1px 1px at 85% 30%, white, transparent);
+            animation-delay: 2s;
+            animation-duration: 5s;
+        }
+        @keyframes twinkle {
+            0%   { opacity: 0.3; }
+            50%  { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        #theme-toggle:checked ~ .stars { opacity: 0; }
+
+        /* ===== BULUTLAR ===== */
+        .clouds {
+            position: fixed; top: 0; left: 0;
+            width: 100%; pointer-events: none; z-index: 0;
+        }
+        .cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50px;
+            filter: blur(6px);
+        }
+        .cloud::before, .cloud::after {
+            content: ''; position: absolute;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+        .c1 { width:180px;height:45px;top:30px; animation:cloud 20s linear infinite; }
+        .c1::before { width:70px;height:70px;top:-35px;left:25px; }
+        .c1::after  { width:55px;height:55px;top:-28px;left:80px; }
+
+        .c2 { width:140px;height:38px;top:90px; animation:cloud 28s linear infinite;animation-delay:-10s; }
+        .c2::before { width:55px;height:55px;top:-28px;left:18px; }
+        .c2::after  { width:45px;height:45px;top:-22px;left:65px; }
+
+        .c3 { width:220px;height:50px;top:15px; animation:cloud 22s linear infinite;animation-delay:-16s; }
+        .c3::before { width:85px;height:85px;top:-42px;left:35px; }
+        .c3::after  { width:65px;height:65px;top:-33px;left:105px; }
+
+        @keyframes cloud { from{left:-280px} to{left:110%} }
+
+        #theme-toggle:checked ~ .clouds .cloud,
+        #theme-toggle:checked ~ .clouds .cloud::before,
+        #theme-toggle:checked ~ .clouds .cloud::after {
+            background: rgba(100,130,200,0.12);
+        }
+
+        /* ===== METEOR ===== */
+        .meteor-wrap {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        .meteor {
+            position: absolute;
+            width: 120px; height: 2px;
+            background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+            border-radius: 2px;
+            animation: meteor-fall linear infinite;
+            opacity: 0;
+        }
+        .meteor:nth-child(1)  { top:5%;  left:20%; animation-duration:2.5s; animation-delay:0s; }
+        .meteor:nth-child(2)  { top:15%; left:60%; animation-duration:3s;   animation-delay:1.2s; }
+        .meteor:nth-child(3)  { top:8%;  left:40%; animation-duration:2s;   animation-delay:2.5s; }
+        .meteor:nth-child(4)  { top:2%;  left:75%; animation-duration:3.5s; animation-delay:0.7s; }
+        .meteor:nth-child(5)  { top:20%; left:10%; animation-duration:2.8s; animation-delay:1.8s; }
+
+        @keyframes meteor-fall {
+            0%   { opacity:0; transform:translateX(0) translateY(0) rotate(35deg); }
+            10%  { opacity:1; }
+            80%  { opacity:0.8; }
+            100% { opacity:0; transform:translateX(300px) translateY(200px) rotate(35deg); }
+        }
+        #theme-toggle:checked ~ .meteor-wrap { opacity: 0.15; }
+
+        /* ===== CONTENT ===== */
+        .container {
+            position: relative; z-index: 10;
+            max-width: 900px; margin: 30px auto; padding: 0 20px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; padding: 30px; border-radius: 16px; margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(102,126,234,0.4);
+        }
+        .header h1 { font-size: 28px; }
+        .header p  { opacity: 0.85; margin-top: 6px; }
+        #theme-toggle:checked ~ .container .header {
+            box-shadow: 0 8px 24px rgba(102,126,234,0.2);
+        }
+
+        /* ===== SEARCH ===== */
+        .search-bar { display:flex; gap:10px; margin-bottom:16px; }
+        .search-bar input {
+            flex:1; padding:10px 16px;
+            border:2px solid rgba(255,255,255,0.15);
+            border-radius:10px; font-size:15px; outline:none;
+            background: rgba(255,255,255,0.08);
+            color: white; transition: border 0.2s, background 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .search-bar input::placeholder { color: rgba(255,255,255,0.4); }
+        .search-bar input:focus { border-color:#a78bfa; background:rgba(255,255,255,0.12); }
+        .search-bar button {
+            padding:10px 20px; background:#667eea; color:white;
+            border:none; border-radius:10px; cursor:pointer; font-size:15px;
+            transition: background 0.2s;
+        }
+        .search-bar button:hover { background:#5a6fd6; }
+
+        #theme-toggle:checked ~ .container .search-bar input {
+            background: white; color: #333; border-color: #ddd;
+        }
+        #theme-toggle:checked ~ .container .search-bar input::placeholder { color: #aaa; }
+
+        /* ===== SORT ===== */
+        .sort-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .sort-btn {
+            padding:7px 14px; border-radius:20px; text-decoration:none;
+            font-size:13px; font-weight:500;
+            border:2px solid rgba(167,139,250,0.6);
+            color:#a78bfa; transition:all 0.2s;
+            background: rgba(167,139,250,0.08);
+        }
+        .sort-btn:hover, .sort-btn.active { background:#667eea; color:white; border-color:#667eea; }
+
+        /* ===== ACTION BAR ===== */
+        .action-bar { display:flex; gap:10px; margin-bottom:20px; }
+        .btn-green {
+            padding:10px 18px; background:#28a745; color:white;
+            border-radius:10px; text-decoration:none; font-size:14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+        }
+        .btn-gray {
+            padding:10px 18px; background:#6c757d; color:white;
+            border-radius:10px; text-decoration:none; font-size:14px;
+            transition: transform 0.2s;
+        }
+        .btn-green:hover { background:#218838; transform:translateY(-2px); box-shadow:0 6px 16px rgba(40,167,69,0.4); }
+        .btn-gray:hover  { background:#5a6268; transform:translateY(-2px); }
+
+        /* ===== CARD + HOVER UCHQUN ===== */
+        .maqola-card {
+            position: relative;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius:12px; padding:18px 20px;
+            margin-bottom:12px;
+            display:flex; justify-content:space-between; align-items:center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            overflow: hidden;
+        }
+        #theme-toggle:checked ~ .container .maqola-card {
+            background: white;
+            border-color: rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        /* Hover uchqun effekti */
+        .maqola-card::before {
+            content: '';
+            position: absolute;
+            top: var(--y, 50%);
+            left: var(--x, 50%);
+            width: 0; height: 0;
+            background: radial-gradient(circle, rgba(167,139,250,0.35) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s, opacity 0.4s;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .maqola-card:hover::before {
+            width: 300px; height: 300px; opacity: 1;
+        }
+        .maqola-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.25);
+            border-color: rgba(167,139,250,0.4);
+        }
+
+        .maqola-info a {
+            font-size:17px; font-weight:600; color:#a78bfa; text-decoration:none;
+            position: relative; z-index: 1;
+        }
+        .maqola-info a:hover { color: #c4b5fd; }
+        .maqola-info span { color:rgba(255,255,255,0.5); font-size:13px; margin-left:8px; }
+        #theme-toggle:checked ~ .container .maqola-info a { color: #667eea; }
+        #theme-toggle:checked ~ .container .maqola-info span { color: #888; }
+
+        .maqola-actions { display:flex; gap:8px; position:relative; z-index:1; }
+        .btn-edit {
+            padding:7px 14px; background:#fd7e14; color:white;
+            border-radius:8px; text-decoration:none; font-size:13px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-delete {
+            padding:7px 14px; background:#dc3545; color:white;
+            border-radius:8px; text-decoration:none; font-size:13px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-edit:hover   { background:#e8690a; transform:scale(1.05); }
+        .btn-delete:hover { background:#c82333; transform:scale(1.05); }
+
+        /* ===== EMPTY ===== */
+        .empty { text-align:center; padding:40px; color:rgba(255,255,255,0.4); font-size:16px; }
+        #theme-toggle:checked ~ .container .empty { color: #aaa; }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display:flex; align-items:center; justify-content:center;
+            gap:12px; margin-top:24px; padding-bottom: 40px;
+        }
+        .page-btn {
+            padding:8px 20px; background: linear-gradient(135deg,#667eea,#764ba2);
+            color:white; border-radius:20px; text-decoration:none; font-size:14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        .page-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(102,126,234,0.5); }
+        .page-info { color:rgba(255,255,255,0.6); font-size:14px; }
+        #theme-toggle:checked ~ .container .page-info { color: #555; }
+    </style>
 </head>
 <body>
-    <h1>{{ sarlavha }}</h1>
-    <p>Jami maqolalar soni: {{ jami }}</p>
 
-    <a href="{% url 'maqola_yangi' %}"><button style="background-color: green; color: white; padding: 10px;">➕ Yangi maqola qo'shish</button></a>
-    <a href="{% url 'about' %}"><button style="padding: 10px;">Biz haqimizda</button></a>
-    <hr>
+<!-- Hidden checkbox for dark/light -->
+<input type="checkbox" id="theme-toggle">
+<label for="theme-toggle" class="theme-btn">🌙 Dark / Light</label>
 
-    <ul>
-        {% for m in maqolalar %}
-            <li style="margin-bottom: 15px;">
-                <a href="{% url 'detail' m.pk %}" style="font-size: 18px; font-weight: bold;">{{ m.sarlavha }}</a> - {{ m.muallif }}
-                <br>
-                <a href="{% url 'maqola_tahrirlash' m.pk %}"><button style="background-color: orange; color: white;">✏️ Tahrirlash</button></a>
-                <a href="{% url 'maqola_ochirish' m.pk %}"><button style="background-color: red; color: white;">🗑️ O'chirish</button></a>
-            </li>
-        {% empty %}
-            <li>Hozircha maqolalar yo'q.</li>
-        {% endfor %}
-    </ul>
+<!-- RGB kvadrat sim -->
+<div class="rgb-border"></div>
+
+<!-- Yulduzlar -->
+<div class="stars"></div>
+
+<!-- Bulutlar -->
+<div class="clouds">
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+</div>
+
+<!-- Meteorlar -->
+<div class="meteor-wrap">
+    <div class="meteor"></div>
+    <div class="meteor"></div>
+    <div class="meteor"></div>
+    <div class="meteor"></div>
+    <div class="meteor"></div>
+</div>
+
+<div class="container">
+
+    <div class="header">
+        <h1>📝 {{ sarlavha }}</h1>
+        <p>Jami maqolalar soni: {{ jami }}</p>
+    </div>
+
+    <form method="get" class="search-bar">
+        <input type="text" name="q" value="{{ q }}" placeholder="🔍 Qidiruv...">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <button type="submit">Qidirish</button>
+    </form>
+
+    <div class="sort-bar">
+        <a href="?sort=sarlavha&q={{ q }}" class="sort-btn {% if sort == 'sarlavha' %}active{% endif %}">A → Z</a>
+        <a href="?sort=-sarlavha&q={{ q }}" class="sort-btn {% if sort == '-sarlavha' %}active{% endif %}">Z → A</a>
+        <a href="?sort=-sana&q={{ q }}" class="sort-btn {% if sort == '-sana' %}active{% endif %}">🕐 Yangi</a>
+        <a href="?sort=sana&q={{ q }}" class="sort-btn {% if sort == 'sana' %}active{% endif %}">🕐 Eski</a>
+        <a href="?sort=muallif&q={{ q }}" class="sort-btn {% if sort == 'muallif' %}active{% endif %}">👤 Muallif</a>
+    </div>
+
+    <div class="action-bar">
+        <a href="{% url 'maqola_yangi' %}" class="btn-green">➕ Yangi maqola</a>
+        <a href="{% url 'about' %}" class="btn-gray">ℹ️ Biz haqimizda</a>
+    </div>
+
+    {% for m in maqolalar %}
+    <div class="maqola-card">
+        <div class="maqola-info">
+            <a href="{% url 'detail' m.pk %}">{{ m.sarlavha }}</a>
+            <span>👤 {{ m.muallif }}</span>
+        </div>
+        <div class="maqola-actions">
+            <a href="{% url 'maqola_tahrirlash' m.pk %}" class="btn-edit">✏️ Tahrirlash</a>
+            <a href="{% url 'maqola_ochirish' m.pk %}" class="btn-delete">🗑️ O'chirish</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty">😕 Hozircha maqolalar yo'q.</div>
+    {% endfor %}
+
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&sort={{ sort }}&q={{ q }}" class="page-btn">← Oldingi</a>
+        {% endif %}
+        <span class="page-info">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&sort={{ sort }}&q={{ q }}" class="page-btn">Keyingi →</a>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Faqat hover uchqun uchun minimal JS (CSS --x,--y o'zgaruvchilari) -->
+<script>
+document.querySelectorAll('.maqola-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--x', e.clientX - r.left + 'px');
+        card.style.setProperty('--y', e.clientY - r.top + 'px');
+    });
+});
+</script>
+
 </body>
 </html>
